@@ -94,22 +94,42 @@ services:
       --serve-artifacts
       --gunicorn-opts "--log-level debug"
 
-  client:
-    build:
-      context: .
-    container_name: client
+  # client:
+  #   build:
+  #     context: .
+  #   container_name: client
+  #   depends_on:
+  #     - tracking-server
+  #   networks:
+  #     - deployml_network
+  #   environment:
+  #     MLFLOW_TRACKING_URI: http://tracking-server:5000
+  #   volumes:
+  #     - ./mlflow_test.py:/mlflow_test.py
+  #   command: >
+  #     bash -c "
+  #     pip install mlflow &&
+  #     python /mlflow_test.py
+  #     "
+  resnet-client:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.model
+    image: jasoncky96/pytorch-resnet18:latest
+    container_name: pytorch
     depends_on:
       - tracking-server
     networks:
       - deployml_network
     environment:
+      TORCH_HOME: /app
       MLFLOW_TRACKING_URI: http://tracking-server:5000
     volumes:
-      - ./mlflow_test.py:/mlflow_test.py
+      - ./mlflow_upload.py:/app/mlflow_upload.py
     command: >
       bash -c "
       pip install mlflow &&
-      python /mlflow_test.py
+      python mlflow_upload.py
       "
       
 networks:
