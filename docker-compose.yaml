@@ -35,7 +35,7 @@ services:
       - mlflow
     entrypoint: >
       bash -c "
-      mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+      mc alias set minio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
       if ! mc ls minio | grep --quiet bucket; then
         mc mb minio/bucket
       else
@@ -44,7 +44,7 @@ services:
       "
 
   postgres:
-    image: postgres
+    image: postgres:11
     container_name: mlflow-postgres
     restart: always
     networks:
@@ -94,29 +94,10 @@ services:
       --serve-artifacts
       --gunicorn-opts "--log-level debug"
 
-  # client:
-  #   build:
-  #     context: .
-  #   container_name: client
-  #   depends_on:
-  #     - tracking-server
-  #   networks:
-  #     - deployml_network
-  #   environment:
-  #     MLFLOW_TRACKING_URI: http://tracking-server:5000
-  #   volumes:
-  #     - ./mlflow_test.py:/mlflow_test.py
-  #   command: >
-  #     bash -c "
-  #     pip install mlflow &&
-  #     python /mlflow_test.py
-  #     "
-  resnet-client:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.model
-    image: jasoncky96/pytorch-resnet18:latest
-    container_name: pytorch
+  mlflow-client:
+    build:
+      context: .
+    container_name: mlflow-client
     depends_on:
       - tracking-server
     networks:
@@ -125,11 +106,11 @@ services:
       TORCH_HOME: /app
       MLFLOW_TRACKING_URI: http://tracking-server:5000
     volumes:
-      - ./mlflow_upload.py:/app/mlflow_upload.py
+      - ./mlflow_upload.py:/mlflow_upload.py
     command: >
       bash -c "
       pip install mlflow &&
-      python mlflow_upload.py
+      python /mlflow_upload.py
       "
       
 networks:
