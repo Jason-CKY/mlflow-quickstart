@@ -92,7 +92,7 @@ services:
       --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       --artifacts-destination s3://bucket
       --serve-artifacts
-      --gunicorn-opts "--log-level debug"
+      --gunicorn-opts "--log-level debug --timeout 60 --graceful-timeout 60 --keep-alive 60"
 
   mlflow-client:
     build:
