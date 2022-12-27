@@ -64,8 +64,7 @@ services:
       retries: 5
       
   tracking-server:
-    build:
-      context: .
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: mlflow
     depends_on:
       - postgres
@@ -86,13 +85,16 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     command: >
+      bash -c "
+      pip install psycopg2-binary boto3 minio &&
       mlflow server
       --host 0.0.0.0
       --port 5000
       --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       --artifacts-destination s3://bucket
       --serve-artifacts
-      --gunicorn-opts "--log-level debug --timeout 60 --graceful-timeout 60 --keep-alive 60"
+      --gunicorn-opts \"--log-level debug --timeout 60 --graceful-timeout 60 --keep-alive 60\"
+      "
 
   mlflow-client:
     build:
@@ -109,10 +111,9 @@ services:
       - ./mlflow_upload.py:/mlflow_upload.py
     command: >
       bash -c "
-      pip install mlflow &&
       python /mlflow_upload.py
       "
-      
+
 networks:
   mlflow:
   deployml_network:
